@@ -30,7 +30,7 @@ const pong = async (req, res) => {
 const calculateIncentiveScore  =  (totalViews,followers,posts) => {
     // incentiveScore = (totalViews / creator.follower) + followers/FOLLOWER_CONSTANT + post / POST_CONSTANT;
 
-    const incentiveScore = (totalViews / followers) + followers/FOLLOWER_CONSTANT + posts / POST_CONSTANT;
+    const incentiveScore = (totalViews / (followers+1)) + followers/FOLLOWER_CONSTANT + posts / POST_CONSTANT;
     return incentiveScore;
 
 
@@ -130,6 +130,13 @@ const viewContent = async (req, res) => {
 const findIncentive = async (req, res) => {
     const { creatorAddress, followers, post  } = req.body;
     const creatorData = await Creator.findOne({address: creatorAddress,monthId : +monthId-1});
+    if(!creatorData) {
+        res.status(500).json({
+            status: 500,
+            message: "Creator don't have any Earnings",
+          });
+          return;
+    }
     const incentiveScore = calculateIncentiveScore(creatorData.monthlyEarnings,followers,post);
     const signature = await signer.signMessage(incentiveScore.toString());
     res.status(200).json({
@@ -159,9 +166,7 @@ const findIncentiveFactor = async (req, res) => {
 
 const getIncentiveData = async (req,res) => {
     const { address,monthId } = req.query;
-    console.log(address,monthId);
     // if address and monthID is null return error
-
     if(!address || !monthId){
         res.status(500).json({
             status: 500,
