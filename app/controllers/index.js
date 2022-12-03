@@ -22,7 +22,9 @@ var monthId = 0;
 
 
 const pong = async (req, res) => {
-    res.send(`pong ${ID}`);
+    monthId = await IncentiveManagerInst.currentMonth();
+
+    res.send(`pong ${monthId}`);
 }
 
 const calculateIncentiveScore  =  (totalViews,followers,posts) => {
@@ -155,9 +157,31 @@ const findIncentiveFactor = async (req, res) => {
 
 }
 
+const getIncentiveData = async (req,res) => {
+    const { address,monthId } = req.query;
+    console.log(address,monthId);
+    // if address and monthID is null return error
+
+    if(!address || !monthId){
+        res.status(500).json({
+            status: 500,
+            message: 'address and monthID required ',
+          });
+    }
+
+    const data = await Creator.findOne({address,monthId});
+    return res.status(200).json({
+        status: 200,
+        message: 'Incentive Data fetch successfully',
+        data: data,
+    });
+    
+}
+
 module.exports = {
     pong, 
     onLogin, 
+    getIncentiveData,
     viewContent, 
     findIncentive,
     findIncentiveFactor
