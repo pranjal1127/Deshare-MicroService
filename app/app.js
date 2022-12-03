@@ -1,8 +1,11 @@
+require('dotenv').config()
 const app = require('express')();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const {MONGO_DB_URL} = require('./config/constant');
+
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
