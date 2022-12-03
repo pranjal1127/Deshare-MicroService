@@ -4,9 +4,16 @@ const Creator = require('../model/Creator.model');
 const User = require('../model/User.model');
 const ethers = require('ethers');
 const IncentiveManagerABI = require('../../abis/IncentiveManager.json');
-const {ALCHAMY_RPC_URL,INCENTIVE_MANAGER_CONTRACT_ADDRESS} = require('../config/constant');
+const {
+    ALCHAMY_RPC_URL,
+    INCENTIVE_MANAGER_CONTRACT_ADDRESS,
+    FOLLOWER_CONSTANT,
+    POST_CONSTANT,
+    ADMIN_PRIVATE_KEY
+} = require('../config/constant');
 
 const provider = new ethers.providers.JsonRpcProvider(ALCHAMY_RPC_URL);
+const signer = new ethers.Wallet(ADMIN_PRIVATE_KEY,provider);
 
 const IncentiveManagerInst = new ethers.Contract(INCENTIVE_MANAGER_CONTRACT_ADDRESS, IncentiveManagerABI.abi, provider);
 
@@ -18,7 +25,12 @@ const pong = async (req, res) => {
     res.send(`pong ${ID}`);
 }
 
-const getMonthID = async () => {
+const calculateIncentiveScore  =  (totalViews,followers,posts) => {
+    // incentiveScore = (totalViews / creator.follower) + followers/FOLLOWER_CONSTANT + post / POST_CONSTANT;
+
+    const incentiveScore = (totalViews / followers) + followers/FOLLOWER_CONSTANT + posts / POST_CONSTANT;
+    return incentiveScore;
+
 
 }
 
@@ -75,11 +87,6 @@ const onLogin = async (req, res) => {
     
 }
 
-
-
-const getCreator = async (req, res) => {
-
-}
 const viewContent = async (req, res) => {
     const { userAddress, creatorAddress } = req.body;
 
@@ -106,11 +113,42 @@ const viewContent = async (req, res) => {
     }
 
 }
-const findIncentive = async (req, res) => {
 
+
+const findIncentive = async (req, res) => {
+    const { creatorAddress, followers, post  } = req.body;
+    const creatorData = await Creator.findOne({address: creatorAddress,monthId : +monthId-1});
+    const incentiveScore = calculateIncentiveScore(creatorData.monthlyEarnings,followers,post);
+    const signature = await signer.signMessage(incentiveScore.toString());
+    res.status(200).json({
+        status: 200,
+        message: 'Incentive Score',
+        data: {
+            incentiveScore,
+            signature
+        },
+    });
 }
 
 const findIncentiveFactor = async (req, res) => {
+    const allData = await Creator.find({monthId});
+    const totalIncentiveScore = allData.reduce((acc,curr) => {
+        return acc + curr.monthlyEarnings;
+    },0);
+    return res.status(200).json({
+        status: 200,
+        message: 'Incentive Factor',
+        data: {
+            incentiveFactor: totalIncentiveScore
+        },
+    });
+
 }
 
-module.exports = {pong, onLogin, getCreator, viewContent, findIncentive};
+module.exports = {
+    pong, 
+    onLogin, 
+    viewContent, 
+    findIncentive,
+    findIncentiveFactor
+};
