@@ -101,6 +101,16 @@ const viewContent = async (req, res) => {
                 }); 
             return;
         }
+
+        //if userAddress === creatorAddress then return error
+        if(userAddress === creatorAddress) {
+            res.status(200).json({
+                status: 200,
+                message: 'User and creator are same',
+                data: null,
+                });
+            return;
+        }
         await Creator.findOneAndUpdate({address: creatorAddress,monthId},{$inc: {monthlyEarnings: 1}});
         await User.findOneAndUpdate({address: userAddress},{$inc: {viewToken: -1}});
     }catch(err){
