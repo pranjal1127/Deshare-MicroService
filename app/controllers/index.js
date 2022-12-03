@@ -41,7 +41,7 @@ const onLogin = async (req, res) => {
         const { address, name } = req.body;
         let  userData = await User.findOne({address});
         monthId = await IncentiveManagerInst.currentMonth();
-        const creatorData = await Creator.findOne({address,monthId});
+        let creatorData = await Creator.findOne({address,monthId});
         if(!userData) {
             user = new User();
             user.address = address;
@@ -56,19 +56,19 @@ const onLogin = async (req, res) => {
             if(hours > 24) {
                 userData.viewToken = 60;
                 userData.lastUpdate = Date.now();
-                userData.save();
+                await userData.save();
             }
         }
 
-        if(!creatorData) {
-            creator = new Creator();
-            creator.address = address;
-            creator.name = name;
-            creator.monthlyEarnings = 0;
-            creator.monthId = monthId;
-            creator.save();
-        }
 
+            if(!creatorData) {
+                creator = new Creator();
+                creator.address = address;
+                creator.name = name;
+                creator.monthlyEarnings = 0;
+                creator.monthId = monthId;
+                creatorData = await creator.save();
+            }
 
         res.status(200).json({
             status: 200,

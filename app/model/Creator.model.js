@@ -7,7 +7,7 @@ const CreatorSchema = new Schema({
     address: {
         type: String,
         required: true,
-        unique: true,
+        unique: false,
     },
     name: {
         type: String,
